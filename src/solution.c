@@ -1002,7 +1002,7 @@ static int outpos(unsigned char *buff, const char *s, const sol_t *sol,
 static int outenu(unsigned char *buff, const char *s, const sol_t *sol,
                   const double *rb, const solopt_t *opt)
 {
-    double pos[3],rr[3],enu[3],P[9],Q[9];
+    double pos[3],rr[3],enu[3],P[9],Q[9],vel[3];
     int i;
     const char *sep=opt2sep(opt);
     char *p=(char *)buff;
@@ -1014,10 +1014,12 @@ static int outenu(unsigned char *buff, const char *s, const sol_t *sol,
     soltocov(sol,P);
     covenu(pos,P,Q);
     ecef2enu(pos,rr,enu);
-    p+=sprintf(p,"%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f\n",
+    ecef2enu(pos,sol->rr+3,vel);
+    p+=sprintf(p,"%s%s%14.4f%s%14.4f%s%14.4f%s%3d%s%3d%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%8.4f%s%6.2f%s%6.1f%s%14.4f%s%14.4f%s%14.4f\n",
                s,sep,enu[0],sep,enu[1],sep,enu[2],sep,sol->stat,sep,sol->ns,sep,
                SQRT(Q[0]),sep,SQRT(Q[4]),sep,SQRT(Q[8]),sep,sqvar(Q[1]),
-               sep,sqvar(Q[5]),sep,sqvar(Q[2]),sep,sol->age,sep,sol->ratio);
+               sep,sqvar(Q[5]),sep,sqvar(Q[2]),sep,sol->age,sep,sol->ratio,
+               sep,vel[0],sep,vel[1],sep,vel[2]);
     return p-(char *)buff;
 }
 /* output solution in the form of nmea RMC sentence --------------------------*/
@@ -1383,10 +1385,11 @@ extern int outsolheads(unsigned char *buff, const solopt_t *opt)
                    "sdyz(m)",sep,"sdzx(m)",sep,"age(s)",sep,"ratio");
     }
     else if (opt->posf==SOLF_ENU) { /* e/n/u-baseline */
-        p+=sprintf(p,"%14s%s%14s%s%14s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s\n",
+        p+=sprintf(p,"%14s%s%14s%s%14s%s%3s%s%3s%s%8s%s%8s%s%8s%s%8s%s%8s%s%8s%s%6s%s%6s%s%9s%s%9s%s%9s\n",
                    "e-baseline(m)",sep,"n-baseline(m)",sep,"u-baseline(m)",sep,
                    "Q",sep,"ns",sep,"sde(m)",sep,"sdn(m)",sep,"sdu(m)",sep,
-                   "sden(m)",sep,"sdnu(m)",sep,"sdue(m)",sep,"age(s)",sep,"ratio");
+                   "sden(m)",sep,"sdnu(m)",sep,"sdue(m)",sep,"age(s)",sep,"ratio",
+                   sep, "e-vel(m)", sep, "n-vel(m)", sep, "u-vel(m)");
     }
     return p-(char *)buff;
 }
